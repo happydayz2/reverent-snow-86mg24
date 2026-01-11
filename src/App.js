@@ -19,7 +19,6 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
 // Fix for default Leaflet marker icons in React
-// This handles the issue where markers sometimes don't show up in React apps
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -31,7 +30,7 @@ L.Icon.Default.mergeOptions({
 });
 
 // --- CONFIGURATION ---
-// PASTE YOUR FIREBASE CONFIG HERE
+// !!! PASTE YOUR FIREBASE CONFIG HERE !!!
 const firebaseConfig = {
   apiKey: "AIzaSyC9raLv_4fQzq0bo4OGg701YANPycZRnYI",
   authDomain: "bird-watching-aa6e5.firebaseapp.com",
@@ -54,7 +53,7 @@ const THREAT_TYPES = [
     color: "text-blue-600",
     bgColor: "bg-blue-100",
     icon: "🚙",
-    pinColor: "blue",
+    pinColor: "#2563eb", // blue-600
   },
   {
     code: "Red Hawk",
@@ -62,7 +61,7 @@ const THREAT_TYPES = [
     color: "text-red-600",
     bgColor: "bg-red-100",
     icon: "🦅",
-    pinColor: "red",
+    pinColor: "#dc2626", // red-600
   },
   {
     code: "Nest",
@@ -70,7 +69,7 @@ const THREAT_TYPES = [
     color: "text-orange-600",
     bgColor: "bg-orange-100",
     icon: "🚧",
-    pinColor: "orange",
+    pinColor: "#ea580c", // orange-600
   },
   {
     code: "Flock",
@@ -78,7 +77,7 @@ const THREAT_TYPES = [
     color: "text-purple-600",
     bgColor: "bg-purple-100",
     icon: "🚚",
-    pinColor: "purple",
+    pinColor: "#9333ea", // purple-600
   },
 ];
 
@@ -86,10 +85,10 @@ const THREAT_TYPES = [
 const createCustomIcon = (color) => {
   return new L.DivIcon({
     className: "custom-icon",
-    html: `<div style="background-color: ${color}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.4);"></div>`,
-    iconSize: [12, 12],
-    iconAnchor: [6, 6],
-    popupAnchor: [0, -6],
+    html: `<div style="background-color: ${color}; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.4);"></div>`,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+    popupAnchor: [0, -7],
   });
 };
 
@@ -110,7 +109,7 @@ export default function App() {
         const q = query(
           collection(db, "sightings"),
           orderBy("timestamp", "desc"),
-          limit(100) // Increased limit for map
+          limit(100)
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -161,7 +160,6 @@ export default function App() {
         });
       }
 
-      // If location failed (0,0), don't post to map effectively, but still save
       await addDoc(collection(db, "sightings"), {
         type: typeCode,
         notes: notes || "No specific details.",
@@ -180,13 +178,11 @@ export default function App() {
     localStorage.clear();
   };
 
-  // --- HELPERS ---
-
   const formatTime = (timestamp) => {
     if (!timestamp) return "Just now";
     const date = timestamp.toDate();
     const now = new Date();
-    const diff = (now - date) / 1000 / 60; // minutes
+    const diff = (now - date) / 1000 / 60;
     if (diff < 60) return `${Math.floor(diff)}m ago`;
     return `${Math.floor(diff / 60)}h ago`;
   };
@@ -213,9 +209,9 @@ export default function App() {
 
   // --- MAIN APP ---
   return (
-    <div className="min-h-screen bg-stone-100 font-sans text-stone-800 max-w-md mx-auto relative overflow-hidden flex flex-col">
+    <div className="min-h-screen bg-stone-100 font-sans text-stone-800 max-w-md mx-auto relative overflow-hidden flex flex-col h-screen">
       {/* Header */}
-      <div className="bg-emerald-800 p-4 text-white shadow-md flex justify-between items-center z-20 relative">
+      <div className="bg-emerald-800 p-4 text-white shadow-md flex justify-between items-center z-20 relative shrink-0">
         <div className="flex items-center gap-2">
           <Feather size={20} />
           <h1 className="font-bold text-lg">Bird Watch</h1>
@@ -230,8 +226,8 @@ export default function App() {
         </div>
       </div>
 
-      {/* TABS (Feed vs Map) */}
-      <div className="flex bg-white border-b border-stone-200">
+      {/* TABS */}
+      <div className="flex bg-white border-b border-stone-200 shrink-0">
         <button
           onClick={() => setView("feed")}
           className={`flex-1 p-3 text-sm font-bold flex justify-center items-center gap-2 ${
@@ -255,10 +251,10 @@ export default function App() {
       </div>
 
       {/* CONTENT AREA */}
-      <div className="flex-1 overflow-y-auto relative">
-        {/* VIEW: FEED */}
+      <div className="flex-1 relative overflow-hidden">
+        {/* FEED */}
         {view === "feed" && (
-          <div className="p-4 pb-24 space-y-4">
+          <div className="absolute inset-0 overflow-y-auto p-4 pb-24 space-y-4">
             <div className="bg-emerald-100 p-3 rounded-lg text-xs text-emerald-800 mb-4 flex gap-2 items-start">
               <Info size={16} className="shrink-0" />
               <p>Recent sightings. Verify species before logging.</p>
@@ -291,25 +287,22 @@ export default function App() {
           </div>
         )}
 
-        {/* VIEW: MAP */}
+        {/* MAP */}
         {view === "map" && (
-          <div className="h-full w-full absolute inset-0 z-10">
+          <div className="absolute inset-0 z-10">
             <MapContainer
               center={
                 userLocation
                   ? [userLocation.lat, userLocation.lng]
                   : [40.518, -78.394]
-              } // Altoona coords default
+              }
               zoom={13}
               style={{ height: "100%", width: "100%" }}
             >
-              {/* OpenStreetMap Tiles (Generic/Camouflaged) */}
               <TileLayer
                 attribution="&copy; OpenStreetMap contributors"
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-
-              {/* Plot Reports */}
               {reports.map((report) => {
                 if (
                   !report.location ||
@@ -319,7 +312,6 @@ export default function App() {
                 const bird =
                   THREAT_TYPES.find((t) => t.code === report.type) ||
                   THREAT_TYPES[0];
-
                 return (
                   <Marker
                     key={report.id}
@@ -331,10 +323,6 @@ export default function App() {
                         <strong className={`${bird.color}`}>{bird.code}</strong>
                         <br />
                         <span className="text-xs">{report.notes}</span>
-                        <br />
-                        <span className="text-xs text-gray-400">
-                          {formatTime(report.timestamp)}
-                        </span>
                       </div>
                     </Popup>
                   </Marker>
@@ -344,7 +332,7 @@ export default function App() {
           </div>
         )}
 
-        {/* VIEW: REPORT (Overlay) */}
+        {/* REPORT */}
         {view === "report" && (
           <div className="absolute inset-0 bg-stone-100 z-30 p-4 overflow-y-auto">
             <h2 className="text-xl font-bold mb-6 text-emerald-900">
@@ -374,9 +362,6 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <p className="text-xs text-center text-stone-500 mb-4">
-              *Location will be pinned to your current position.
-            </p>
             <button
               onClick={() => setView("feed")}
               className="w-full py-3 bg-white border border-stone-300 rounded-lg text-stone-600 font-bold"
@@ -387,7 +372,6 @@ export default function App() {
         )}
       </div>
 
-      {/* Floating Action Button (Only show on Feed or Map) */}
       {(view === "feed" || view === "map") && (
         <button
           onClick={() => setView("report")}
