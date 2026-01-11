@@ -1,7 +1,7 @@
 {
   "name": "altoona-bird-watch",
-  "version": "1.1.0",
-  "description": "Bird Watch App with Map",
+  "version": "1.2.0",
+  "description": "Bird Watch App",
   "main": "src/index.js",
   "dependencies": {
     "firebase": "^10.7.0",
